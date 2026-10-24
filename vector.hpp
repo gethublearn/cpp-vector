@@ -30,11 +30,19 @@ namespace learn {
 
                 ::operator delete(pointer, std::align_val_t{alignof(T)});
             }
+
+            static void end_objects(T* pointer, std::size_t count) {
+                while (count > 0) {
+                    --count;
+                    pointer[count].~T();
+                }
+            }
         
         public:
             Vector() = default;
 
             ~Vector() {
+                end_objects(data_, size_);
                 deallocate(data_);
             }
 
@@ -80,6 +88,15 @@ namespace learn {
                 deallocate(data_);
                 data_ = fresh;
                 capacity_ = requested;
+            }
+
+            void push_back(const T& value) {
+                if (size_ == capacity_) {
+                    throw std::logic_error("learn::Vector::push_back");
+                }
+
+                ::new (static_cast<void*>(data_ + size_)) T(value);
+                ++size_;
             }
     };
 
